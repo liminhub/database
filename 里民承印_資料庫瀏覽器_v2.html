@@ -452,10 +452,104 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); font
 /* ===== DIVIDER ===== */
 .divider { height: 1px; background: var(--border); margin: 20px 0; }
 
+/* ===== HAMBURGER ===== */
+.hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  flex-direction: column;
+  gap: 5px;
+  margin-right: 8px;
+}
+.hamburger span {
+  display: block;
+  width: 20px;
+  height: 2px;
+  background: var(--brand);
+  border-radius: 2px;
+  transition: all .3s;
+}
+
+/* SIDEBAR OVERLAY (mobile) */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  z-index: 98;
+}
+.sidebar-overlay.on { display: block; }
+
+/* ===== TABLET (≤900px) ===== */
+@media (max-width: 900px) {
+  .hdr-title { display: none; }
+  .sidebar { width: 180px; }
+  .main { padding: 20px 16px; }
+}
+
+/* ===== MOBILE (≤768px) ===== */
 @media (max-width: 768px) {
-  .sidebar { display: none; }
+  /* Header */
+  .hamburger { display: flex; }
+  .hdr { padding: 0 14px; }
+  .logo-wrap { padding: 10px 14px 10px 0; margin-right: 8px; }
+  .logo-text .logo-name { font-size: 12px; }
+
+  /* Sidebar — slide in from left */
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 99;
+    transform: translateX(-100%);
+    transition: transform .3s;
+    width: 240px;
+    padding-top: 60px;
+    box-shadow: 4px 0 20px rgba(0,0,0,.12);
+  }
+  .sidebar.open { transform: translateX(0); }
+
+  /* Main */
+  .main { padding: 16px 12px; }
+
+  /* Topbar */
+  .topbar { gap: 8px; }
+  .page-title { font-size: 15px; }
+  .page-subtitle { display: none; }
+  .search-box { width: 100%; order: 10; }
+  .filter-sel { font-size: 11px; padding: 6px 8px; }
+
+  /* Table — horizontal scroll */
+  .tbl-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tbl { min-width: 600px; }
+  .tbl th, .tbl td { padding: 8px 10px; font-size: 11px; }
+
+  /* Cards */
+  .card-grid { grid-template-columns: 1fr; }
+
+  /* Modal */
+  .modal { width: 95vw; max-height: 92vh; }
   .form-grid { grid-template-columns: 1fr; }
   .fg.full { grid-column: span 1; }
+
+  /* View toggle — hide on mobile, default to cards for vendor */
+  .view-toggle { display: none; }
+
+  /* Buttons */
+  .btn { font-size: 11px; padding: 6px 12px; }
+}
+
+/* ===== SMALL MOBILE (≤480px) ===== */
+@media (max-width: 480px) {
+  .main { padding: 12px 10px; }
+  .topbar { margin-bottom: 14px; }
+  .tbl th, .tbl td { padding: 7px 8px; font-size: 10px; }
+  /* Show only key columns on very small screens */
+  .tbl th:nth-child(n+5):not(:last-child),
+  .tbl td:nth-child(n+5):not(:last-child) { display: none; }
 }
 </style>
 </head>
@@ -469,8 +563,14 @@ body { background: var(--bg); color: var(--text); font-family: var(--font); font
   <div class="init-msg" id="init-msg">連線中...</div>
 </div>
 
+<!-- SIDEBAR OVERLAY -->
+<div class="sidebar-overlay" id="sb-overlay" onclick="closeSidebar()"></div>
+
 <!-- HEADER -->
 <header class="hdr">
+  <button class="hamburger" id="hamburger" onclick="toggleSidebar()" aria-label="選單">
+    <span></span><span></span><span></span>
+  </button>
   <div class="logo-wrap">
     <div class="logo-img">里</div>
     <div class="logo-text">
@@ -1032,6 +1132,23 @@ function showToast(msg, type='success') {
   t.className = `toast ${type} on`;
   setTimeout(() => t.classList.remove('on'), 3000);
 }
+
+// ===== MOBILE SIDEBAR =====
+function toggleSidebar() {
+  document.querySelector('.sidebar').classList.toggle('open');
+  document.getElementById('sb-overlay').classList.toggle('on');
+}
+function closeSidebar() {
+  document.querySelector('.sidebar').classList.remove('open');
+  document.getElementById('sb-overlay').classList.remove('on');
+}
+
+// Close sidebar when nav item clicked on mobile
+document.querySelectorAll('.sb-item').forEach(item => {
+  item.addEventListener('click', () => {
+    if (window.innerWidth <= 768) closeSidebar();
+  });
+});
 
 init();
 </script>
