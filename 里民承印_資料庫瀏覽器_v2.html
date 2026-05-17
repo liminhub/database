@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>里民承印｜資料庫管理</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&family=Noto+Serif+TC:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root {
+  /* 品牌色系 — 對齊官網白底乾淨風格 */
+  --white: #ffffff;
+  --bg: #f7f5f2;
+  --surface: #ffffff;
+  --surface2: #f2efe9;
+  --surface3: #ece8e0;
+  --border: #e0d8cc;
+  --border2: #c8bfb0;
+  --brand: #1a1a1a;
+  --accent: #8B6914;
+  --accent-light: #f5ede0;
+  --accent-pale: #faf6ee;
+  --text: #1a1a1a;
+  --muted: #888;
+  --dim: #bbb;
+  --success: #2d7a4f;
+  --success-bg: #edf7f1;
+  --danger: #c0392b;
+  --danger-bg: #fdf0ee;
+  --warn: #b07a1a;
+  --warn-bg: #fdf6e3;
+  --info: #2a5a8a;
+  --info-bg: #eef4fb;
+  --font: 'Noto Sans TC', sans-serif;
+  --serif: 'Noto Serif TC', serif;
+  --mono: 'JetBrains Mono', monospace;
+  --shadow: 0 1px 4px rgba(0,0,0,.06), 0 4px 16px rgba(0,0,0,.04);
+  --shadow-hover: 0 4px 20px rgba(0,0,0,.10);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--text); font-family: var(--font); font-size: 13px; min-height: 100vh; }
+
+/* ===== HEADER ===== */
+.hdr {
+  background: var(--white);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 8px rgba(0,0,0,.04);
+}
+.logo-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px 10px 0;
+  border-right: 1px solid var(--border);
+  margin-right: 20px;
+  text-decoration: none;
+}
+.logo-img {
+  width: 32px;
+  height: 32px;
+  background: var(--brand);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--serif);
+  font-size: 14px;
+  color: #d4a843;
+  font-weight: 700;
+  letter-spacing: .05em;
+}
+.logo-text { }
+.logo-name {
+  font-family: var(--serif);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--brand);
+  letter-spacing: .15em;
+  display: block;
+  line-height: 1.2;
+}
+.logo-sub {
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: .2em;
+  display: block;
+}
+.hdr-title {
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: .05em;
+}
+.hdr-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sync-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--dim);
+  transition: background .3s;
+}
+.sync-dot.ok { background: var(--success); }
+.sync-dot.loading { background: var(--warn); animation: pulse 1s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.sync-label { font-size: 11px; color: var(--muted); }
+
+/* ===== LAYOUT ===== */
+.layout { display: flex; min-height: calc(100vh - 53px); }
+
+/* ===== SIDEBAR ===== */
+.sidebar {
+  width: 210px;
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  padding: 20px 0;
+  flex-shrink: 0;
+  position: sticky;
+  top: 53px;
+  height: calc(100vh - 53px);
+  overflow-y: auto;
+}
+.sb-section { margin-bottom: 24px; }
+.sb-label {
+  font-size: 10px;
+  letter-spacing: .18em;
+  text-transform: uppercase;
+  color: var(--dim);
+  padding: 0 18px;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+.sb-item {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 8px 18px;
+  cursor: pointer;
+  transition: all .15s;
+  border-left: 2px solid transparent;
+  font-size: 12px;
+  color: var(--muted);
+  user-select: none;
+}
+.sb-item:hover { color: var(--text); background: var(--surface2); }
+.sb-item.on { color: var(--accent); border-left-color: var(--accent); background: var(--accent-pale); font-weight: 500; }
+.sb-icon { font-size: 13px; flex-shrink: 0; }
+.sb-count {
+  margin-left: auto;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--dim);
+  background: var(--surface2);
+  padding: 1px 6px;
+  border-radius: 10px;
+}
+.sb-item.on .sb-count { background: var(--accent-light); color: var(--accent); }
+
+/* ===== MAIN ===== */
+.main { flex: 1; padding: 28px; overflow: auto; }
+.page { display: none; }
+.page.on { display: block; }
+
+/* ===== TOPBAR ===== */
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+.page-title {
+  font-family: var(--serif);
+  font-size: 17px;
+  color: var(--brand);
+  letter-spacing: .1em;
+  font-weight: 600;
+}
+.page-subtitle {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: var(--font);
+  letter-spacing: 0;
+  margin-left: 8px;
+  font-weight: 400;
+}
+.spacer { flex: 1; }
+
+/* ===== CONTROLS ===== */
+.search-box {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 7px 12px;
+  width: 200px;
+  transition: border-color .2s;
+}
+.search-box:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139,105,20,.08); }
+.filter-sel {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 7px 10px;
+  cursor: pointer;
+  transition: border-color .2s;
+}
+.filter-sel:focus { outline: none; border-color: var(--accent); }
+
+/* ===== BUTTONS ===== */
+.btn {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 7px 16px;
+  transition: all .2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: .02em;
+}
+.btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-pale); }
+.btn.primary { background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 500; }
+.btn.primary:hover { background: #333; border-color: #333; color: #fff; }
+.btn.accent { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
+.btn.accent:hover { background: #7a5c10; }
+.btn.danger { border-color: var(--danger); color: var(--danger); }
+.btn.danger:hover { background: var(--danger-bg); }
+.btn.sm { font-size: 11px; padding: 5px 12px; }
+
+/* ===== VIEW TOGGLE ===== */
+.view-toggle { display: flex; border: 1px solid var(--border); border-radius: 5px; overflow: hidden; }
+.view-btn { background: var(--white); border: none; color: var(--muted); cursor: pointer; padding: 6px 11px; font-size: 14px; transition: all .2s; }
+.view-btn:hover { background: var(--surface2); }
+.view-btn.on { background: var(--surface2); color: var(--accent); }
+
+/* ===== TABLE ===== */
+.tbl-wrap {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+.tbl { width: 100%; border-collapse: collapse; font-size: 12px; }
+.tbl thead { }
+.tbl th {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 14px;
+  text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.tbl td {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+  color: var(--text);
+}
+.tbl tr:last-child td { border-bottom: none; }
+.tbl tbody tr:hover td { background: var(--accent-pale); }
+.tbl td.mono { font-family: var(--mono); font-size: 11px; }
+.tbl td.muted { color: var(--muted); font-size: 11px; }
+.tbl td.center { text-align: center; }
+
+/* ===== BADGES ===== */
+.badge {
+  display: inline-block;
+  border-radius: 4px;
+  font-size: 10px;
+  padding: 2px 8px;
+  letter-spacing: .03em;
+  white-space: nowrap;
+  font-weight: 500;
+}
+.badge-print { background: #edf7f1; color: #2d7a4f; border: 1px solid #c5e8d5; }
+.badge-post { background: #eef4fb; color: #2a5a8a; border: 1px solid #c0d8f0; }
+.badge-paper { background: #fdf6e3; color: #8a6010; border: 1px solid #e8d498; }
+.badge-plate { background: #f5eef8; color: #6a3a8a; border: 1px solid #d8b8e8; }
+.badge-oem { background: #eef8f8; color: #2a7a7a; border: 1px solid #b8e0e0; }
+.badge-glue { background: #f8f5ee; color: #6a5a2a; border: 1px solid #d8c898; }
+.badge-die { background: #fdf0ee; color: #8a3028; border: 1px solid #e8c0b8; }
+.badge-other { background: var(--surface2); color: var(--muted); border: 1px solid var(--border); }
+.stock-ok { color: var(--success); font-weight: 500; }
+.stock-order { color: var(--warn); font-weight: 500; }
+.stock-stop { color: var(--danger); font-weight: 500; }
+
+/* ===== ROW ACTIONS ===== */
+.act-btns { display: flex; gap: 3px; justify-content: center; }
+.act-btn {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 3px 7px;
+  transition: all .15s;
+  color: var(--dim);
+}
+.act-btn:hover.edit { color: var(--info); background: var(--info-bg); border-color: #c0d8f0; }
+.act-btn:hover.del { color: var(--danger); background: var(--danger-bg); border-color: #e8c0b8; }
+
+/* ===== VENDOR CARDS ===== */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.vcard {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: var(--shadow);
+  transition: all .2s;
+}
+.vcard:hover { box-shadow: var(--shadow-hover); border-color: var(--border2); }
+.vcard-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+.vcard-name { font-size: 14px; font-weight: 600; color: var(--brand); }
+.vcard-info { font-size: 11px; color: var(--muted); line-height: 2; }
+.vcard-info .row { display: flex; gap: 6px; }
+.vcard-info .ico { flex-shrink: 0; }
+.vcard-info span { color: var(--text); }
+.vcard-footer { display: flex; gap: 8px; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+/* ===== MODAL ===== */
+.modal-bg {
+  position: fixed;
+  inset: 0;
+  background: rgba(26,26,26,.5);
+  z-index: 200;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+.modal-bg.on { display: flex; }
+.modal {
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  width: 680px;
+  max-width: 95vw;
+  max-height: 88vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 60px rgba(0,0,0,.15);
+}
+.modal-hdr {
+  padding: 18px 22px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--surface2);
+}
+.modal-title { font-family: var(--serif); font-size: 14px; color: var(--brand); letter-spacing: .08em; font-weight: 600; }
+.modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1; padding: 2px 6px; border-radius: 4px; }
+.modal-close:hover { background: var(--border); color: var(--text); }
+.modal-body { padding: 22px; overflow-y: auto; flex: 1; }
+.modal-footer { padding: 14px 22px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 8px; background: var(--surface2); }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fg.full { grid-column: span 2; }
+.fg label { font-size: 10px; color: var(--muted); letter-spacing: .08em; text-transform: uppercase; font-weight: 500; }
+.fg input, .fg select, .fg textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 12px;
+  padding: 8px 11px;
+  width: 100%;
+  transition: border-color .2s;
+}
+.fg input:focus, .fg select:focus, .fg textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(139,105,20,.08); }
+.fg textarea { resize: vertical; min-height: 64px; }
+
+/* ===== LOADING / EMPTY ===== */
+.loading-wrap { display: flex; align-items: center; justify-content: center; padding: 60px; color: var(--muted); gap: 10px; }
+.spinner { width: 18px; height: 18px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty-wrap { text-align: center; padding: 60px; color: var(--muted); }
+.empty-icon { font-size: 36px; margin-bottom: 14px; }
+.empty-text { font-size: 13px; }
+
+/* ===== INIT LOADING SCREEN ===== */
+.init-screen {
+  position: fixed;
+  inset: 0;
+  background: var(--white);
+  z-index: 999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+}
+.init-logo { font-family: var(--serif); font-size: 24px; color: var(--brand); letter-spacing: .3em; font-weight: 700; }
+.init-sub { font-size: 11px; color: var(--muted); letter-spacing: .2em; text-transform: uppercase; }
+.init-bar { width: 200px; height: 2px; background: var(--border); border-radius: 2px; overflow: hidden; }
+.init-bar-fill { height: 100%; background: var(--accent); width: 0%; transition: width .3s; border-radius: 2px; }
+.init-msg { font-size: 11px; color: var(--muted); }
+
+/* ===== TOAST ===== */
+.toast {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 18px;
+  font-size: 12px;
+  z-index: 300;
+  transform: translateY(20px);
+  opacity: 0;
+  transition: all .3s;
+  pointer-events: none;
+  box-shadow: var(--shadow-hover);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.toast.on { transform: translateY(0); opacity: 1; }
+.toast.success { border-color: #c5e8d5; }
+.toast.error { border-color: #e8c0b8; }
+
+/* ===== DIVIDER ===== */
+.divider { height: 1px; background: var(--border); margin: 20px 0; }
+
+@media (max-width: 768px) {
+  .sidebar { display: none; }
+  .form-grid { grid-template-columns: 1fr; }
+  .fg.full { grid-column: span 1; }
+}
+</style>
+</head>
+<body>
+
+<!-- INIT LOADING SCREEN -->
+<div class="init-screen" id="init-screen">
+  <div class="init-logo">里 民 承 印</div>
+  <div class="init-sub">LIMINPRINT · DATABASE</div>
+  <div class="init-bar"><div class="init-bar-fill" id="init-bar"></div></div>
+  <div class="init-msg" id="init-msg">連線中...</div>
+</div>
+
+<!-- HEADER -->
+<header class="hdr">
+  <div class="logo-wrap">
+    <div class="logo-img">里</div>
+    <div class="logo-text">
+      <span class="logo-name">里 民 承 印</span>
+      <span class="logo-sub">LIMINPRINT</span>
+    </div>
+  </div>
+  <div class="hdr-title">資料庫管理系統</div>
+  <div class="hdr-right">
+    <div class="sync-dot loading" id="sync-dot"></div>
+    <div class="sync-label" id="sync-label">載入中</div>
+  </div>
+</header>
+
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sb-section">
+    <div class="sb-label">廠商</div>
+    <div class="sb-item on" onclick="showPage('vendors')" id="nav-vendors">
+      <span class="sb-icon">🏭</span>廠商資訊
+      <span class="sb-count" id="cnt-vendors">—</span>
+    </div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-label">印刷</div>
+    <div class="sb-item" onclick="showPage('print_rates')" id="nav-print_rates">
+      <span class="sb-icon">🖨</span>印刷工資
+      <span class="sb-count" id="cnt-print_rates">—</span>
+    </div>
+    <div class="sb-item" onclick="showPage('plates')" id="nav-plates">
+      <span class="sb-icon">🔲</span>版費資料庫
+      <span class="sb-count" id="cnt-plates">—</span>
+    </div>
+    <div class="sb-item" onclick="showPage('oem')" id="nav-oem">
+      <span class="sb-icon">🔄</span>代工廠報價
+      <span class="sb-count" id="cnt-oem">—</span>
+    </div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-label">材料</div>
+    <div class="sb-item" onclick="showPage('paper')" id="nav-paper">
+      <span class="sb-icon">📄</span>紙張資料庫
+      <span class="sb-count" id="cnt-paper">—</span>
+    </div>
+    <div class="sb-item" onclick="showPage('consumables')" id="nav-consumables">
+      <span class="sb-icon">📦</span>耗材資料庫
+      <span class="sb-count" id="cnt-consumables">—</span>
+    </div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-label">加工</div>
+    <div class="sb-item" onclick="showPage('post_process')" id="nav-post_process">
+      <span class="sb-icon">⚙️</span>後加工工資
+      <span class="sb-count" id="cnt-post_process">—</span>
+    </div>
+    <div class="sb-item" onclick="showPage('packaging')" id="nav-packaging">
+      <span class="sb-icon">🎁</span>包裝工資
+      <span class="sb-count" id="cnt-packaging">—</span>
+    </div>
+    <div class="sb-item" onclick="showPage('shipping')" id="nav-shipping">
+      <span class="sb-icon">🚚</span>運費資料
+      <span class="sb-count" id="cnt-shipping">—</span>
+    </div>
+  </div>
+  <div class="sb-section">
+    <div class="sb-label">其他</div>
+    <div class="sb-item" onclick="showPage('notes')" id="nav-notes">
+      <span class="sb-icon">📋</span>但書備註
+      <span class="sb-count" id="cnt-notes">—</span>
+    </div>
+    <div class="sb-item" onclick="showPage('settings')" id="nav-settings">
+      <span class="sb-icon">⚙</span>系統設定
+      <span class="sb-count" id="cnt-settings">—</span>
+    </div>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+
+  <!-- 廠商資訊 -->
+  <div class="page on" id="page-vendors">
+    <div class="topbar">
+      <div>
+        <span class="page-title">廠商資訊</span>
+        <span class="page-subtitle">協力廠商聯絡資料庫</span>
+      </div>
+      <input class="search-box" placeholder="🔍  搜尋廠商名稱..." oninput="filterTable('vendors',this.value)">
+      <select class="filter-sel" onchange="filterByField('vendors','廠商類別',this.value)">
+        <option value="">所有類別</option>
+        <option>平版印刷廠</option><option>版廠</option><option>後加工廠</option>
+        <option>代工廠</option><option>紙廠</option><option>自黏材料</option>
+        <option>刀模廠</option><option>設備商</option><option>物流</option><option>其他</option>
+      </select>
+      <div class="spacer"></div>
+      <div class="view-toggle">
+        <button class="view-btn on" onclick="setView('vendors','table',this)" title="表格">☰</button>
+        <button class="view-btn" onclick="setView('vendors','card',this)" title="卡片">⊞</button>
+      </div>
+      <button class="btn primary" onclick="openAdd('廠商資訊')">＋ 新增廠商</button>
+    </div>
+    <div id="vendors-table"><div class="tbl-wrap"><table class="tbl" id="tbl-vendors"><thead></thead><tbody><tr><td colspan="20"><div class="loading-wrap"><div class="spinner"></div>載入中...</div></td></tr></tbody></table></div></div>
+    <div id="vendors-cards" style="display:none;"><div class="card-grid" id="cg-vendors"></div></div>
+  </div>
+
+  <!-- 印刷工資 -->
+  <div class="page" id="page-print_rates">
+    <div class="topbar">
+      <div><span class="page-title">印刷工資</span><span class="page-subtitle">各廠商機台報價表</span></div>
+      <input class="search-box" placeholder="🔍  搜尋廠商/機台..." oninput="filterTable('print_rates',this.value)">
+      <div class="spacer"></div>
+      <button class="btn primary" onclick="openAdd('印刷工資')">＋ 新增</button>
+    </div>
+    <div class="tbl-wrap"><table class="tbl" id="tbl-print_rates"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- 版費資料庫 -->
+  <div class="page" id="page-plates">
+    <div class="topbar">
+      <div><span class="page-title">版費資料庫</span><span class="page-subtitle">印刷版／燙金版／底片</span></div>
+      <input class="search-box" placeholder="🔍  搜尋版別..." oninput="filterTable('plates',this.value)">
+      <div class="spacer"></div>
+      <button class="btn primary" onclick="openAdd('版費資料庫')">＋ 新增</button>
+    </div>
+    <div class="tbl-wrap"><table class="tbl" id="tbl-plates"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- 代工廠報價 -->
+  <div class="page" id="page-oem">
+    <div class="topbar">
+      <div><span class="page-title">代工廠報價</span><span class="page-subtitle">數位／合版／特殊印刷</span></div>
+      <input class="search-box" placeholder="🔍  搜尋廠商..." oninput="filterTable('oem',this.value)">
+      <div class="spacer"></div>
+      <button class="btn primary" onclick="openAdd('代工廠報價')">＋ 新增</button>
+    </div>
+    <div class="tbl-wrap"><table class="tbl" id="tbl-oem"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- 紙張資料庫 -->
+  <div class="page" id="page-paper">
+    <div class="topbar">
+      <div><span class="page-title">紙張資料庫</span><span class="page-subtitle">平版／數位／貼紙用紙</span></div>
+      <input class="search-box" placeholder="🔍  搜尋紙名..." oninput="filterTable('paper',this.value)">
+      <select class="filter-sel" onchange="filterByField('paper','用途分類',this.value)">
+        <option value="">所有用途</option>
+        <option>數位印刷</option><option>平版印刷</option><option>貼紙用紙</option><option>通用</option>
+      </select>
+      <select class="filter-sel" onchange="filterByField('paper','庫存狀態',this.value)">
+        <option value="">所有庫存</option>
+        <option>現貨</option><option>需訂</option><option>停產</option>
+      </select>
+      <div class="spacer"></div>
+      <button class="btn primary" onclick="openAdd('紙張資料庫')">＋ 新增</button>
+    </div>
+    <div class="tbl-wrap"><table class="tbl" id="tbl-paper"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- 耗材資料庫 -->
+  <div class="page" id="page-consumables">
+    <div class="topbar">
+      <div><span class="page-title">耗材資料庫</span><span class="page-subtitle">包裝袋／紙箱／耗材單價</span></div>
+      <input class="search-box" placeholder="🔍  搜尋品名..." oninput="filterTable('consumables',this.value)">
+      <div class="spacer"></div>
+      <button class="btn primary" onclick="openAdd('耗材資料庫')">＋ 新增</button>
+    </div>
+    <div class="tbl-wrap"><table class="tbl" id="tbl-consumables"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- 後加工工資 -->
+  <div class="page" id="page-post_process">
+    <div class="topbar">
+      <div><span class="page-title">後加工工資</span><span class="page-subtitle">燙金／軋型／裱膜等加工費用</span></div>
+      <input class="search-box" placeholder="🔍  搜尋加工項目..." oninput="filterTable('post_process',this.value)">
+      <div class="spacer"></div>
+      <button class="btn primary" onclick="openAdd('後加工工資')">＋ 新增</button>
+    </div>
+    <div class="tbl-wrap"><table class="tbl" id="tbl-post_process"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- 包裝工資 -->
+  <div class="page" id="page-packaging">
+    <div class="topbar">
+      <div><span class="page-title">包裝工資</span><span class="page-subtitle">手工包裝／裝袋費用</span></div>
+      <input class="search-box" placeholder="🔍  搜尋..." oninput="filterTable('packaging',this.value)">
+      <div class="spacer"></div>
+      <button class="btn primary" onclick="openAdd('包裝工資')">＋ 新增</button>
+    </div>
+    <div class="tbl-wrap"><table class="tbl" id="tbl-packaging"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- 運費資料 -->
+  <div class="page" id="page-shipping">
+    <div class="topbar">
+      <div><span class="page-title">運費資料</span><span class="page-subtitle">物流廠商費率</span></div>
+      <input class="search-box" placeholder="🔍  搜尋物流廠商..." oninput="filterTable('shipping',this.value)">
+      <div class="spacer"></div>
+      <button class="btn primary" onclick="openAdd('運費資料')">＋ 新增</button>
+    </div>
+    <div class="tbl-wrap"><table class="tbl" id="tbl-shipping"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- 但書備註 -->
+  <div class="page" id="page-notes">
+    <div class="topbar">
+      <div><span class="page-title">但書備註</span><span class="page-subtitle">各廠商印刷條件說明</span></div>
+      <input class="search-box" placeholder="🔍  搜尋但書..." oninput="filterTable('notes',this.value)">
+      <div class="spacer"></div>
+      <button class="btn primary" onclick="openAdd('但書備註')">＋ 新增</button>
+    </div>
+    <div class="tbl-wrap"><table class="tbl" id="tbl-notes"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+  <!-- 系統設定 -->
+  <div class="page" id="page-settings">
+    <div class="topbar">
+      <div><span class="page-title">系統設定</span><span class="page-subtitle">全域參數</span></div>
+      <div class="spacer"></div>
+      <button class="btn primary" onclick="openAdd('系統設定')">＋ 新增</button>
+    </div>
+    <div class="tbl-wrap"><table class="tbl" id="tbl-settings"><thead></thead><tbody></tbody></table></div>
+  </div>
+
+</main>
+</div>
+
+<!-- MODAL -->
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <div class="modal-hdr">
+      <div class="modal-title" id="modal-title">新增資料</div>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-body"><div class="form-grid" id="modal-form"></div></div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">取消</button>
+      <button class="btn primary" onclick="saveModal()" id="save-btn">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://script.google.com/macros/s/AKfycbxZDWsRxj9zUZolllCIcl1Xkgo9O0gFHfGGg07dEm5e_ufDq_I9KzpQAE4-qsPscLsr/exec';
+
+const PAGE_SHEET = {
+  vendors:'廠商資訊', print_rates:'印刷工資', plates:'版費資料庫',
+  oem:'代工廠報價', paper:'紙張資料庫', consumables:'耗材資料庫',
+  post_process:'後加工工資', packaging:'包裝工資', shipping:'運費資料',
+  notes:'但書備註', settings:'系統設定'
+};
+
+const CAT_BADGE = {
+  '平版印刷廠':'badge-print','版廠':'badge-plate','後加工廠':'badge-post',
+  '代工廠':'badge-oem','紙廠':'badge-paper','自黏材料':'badge-glue',
+  '刀模廠':'badge-die','設備商':'badge-other','物流':'badge-other','其他':'badge-other'
+};
+
+// 全部資料快取
+let allData = {};
+let currentPage = 'vendors';
+let modalSheet = '';
+let modalRowIdx = null;
+
+// ===== INIT =====
+async function init() {
+  setBar(10, '連線中...');
+  try {
+    const res = await fetch(`${API}?action=getAll`);
+    const data = await res.json();
+    setBar(80, '建立資料索引...');
+
+    // 轉換格式
+    Object.keys(data).forEach(sheetName => {
+      const pageKey = Object.keys(PAGE_SHEET).find(k => PAGE_SHEET[k] === sheetName);
+      if (pageKey) allData[pageKey] = data[sheetName];
+    });
+
+    setBar(95, '渲染介面...');
+    // 更新側欄計數
+    Object.keys(allData).forEach(pk => {
+      const cnt = document.getElementById('cnt-' + pk);
+      if (cnt && allData[pk]) cnt.textContent = allData[pk].rows.length;
+    });
+
+    // 渲染預設頁面
+    renderTable('vendors');
+    setBar(100, '完成');
+
+    setTimeout(() => {
+      document.getElementById('init-screen').style.opacity = '0';
+      document.getElementById('init-screen').style.transition = 'opacity .4s';
+      setTimeout(() => document.getElementById('init-screen').style.display = 'none', 400);
+    }, 300);
+
+    document.getElementById('sync-dot').className = 'sync-dot ok';
+    document.getElementById('sync-label').textContent = '已同步';
+
+  } catch(e) {
+    setBar(100, '連線失敗，請重新整理');
+    document.getElementById('sync-dot').className = 'sync-dot';
+    document.getElementById('sync-label').textContent = '連線失敗';
+  }
+}
+
+function setBar(pct, msg) {
+  document.getElementById('init-bar').style.width = pct + '%';
+  document.getElementById('init-msg').textContent = msg;
+}
+
+// ===== RENDER TABLE =====
+function renderTable(pageKey) {
+  const data = allData[pageKey];
+  const tbl = document.getElementById('tbl-' + pageKey);
+  if (!tbl) return;
+
+  if (!data || !data.headers) {
+    tbl.querySelector('tbody').innerHTML = `<tr><td colspan="20"><div class="empty-wrap"><div class="empty-icon">📭</div><div class="empty-text">尚無資料</div></div></td></tr>`;
+    return;
+  }
+
+  const { headers, rows } = data;
+  const catIdx = headers.indexOf('廠商類別');
+  const stockIdx = headers.indexOf('庫存狀態');
+  const usageIdx = headers.indexOf('用途分類');
+
+  // Header
+  tbl.querySelector('thead').innerHTML = '<tr>' +
+    headers.map(h => `<th>${h}</th>`).join('') +
+    '<th class="center">操作</th></tr>';
+
+  if (rows.length === 0) {
+    tbl.querySelector('tbody').innerHTML = `<tr><td colspan="${headers.length+1}"><div class="empty-wrap"><div class="empty-icon">📭</div><div class="empty-text">尚無資料，點右上角新增</div></div></td></tr>`;
+    return;
+  }
+
+  tbl.querySelector('tbody').innerHTML = rows.map((row, i) => {
+    const cells = headers.map((h, ci) => {
+      let val = row[ci] !== undefined ? row[ci] : '';
+      if (ci === catIdx && val) return `<td><span class="badge ${CAT_BADGE[val]||'badge-other'}">${val}</span></td>`;
+      if (ci === stockIdx && val) {
+        const cls = val==='現貨'?'stock-ok':val==='需訂'?'stock-order':'stock-stop';
+        return `<td><span class="${cls}">${val}</span></td>`;
+      }
+      if (typeof val === 'number') return `<td class="mono">${val.toLocaleString()}</td>`;
+      const str = String(val);
+      if (str.length > 28) return `<td class="muted" title="${str}">${str.slice(0,28)}…</td>`;
+      return `<td>${str}</td>`;
+    }).join('');
+    return `<tr data-row-idx="${i}">
+      ${cells}
+      <td class="center">
+        <div class="act-btns">
+          <button class="act-btn edit" onclick="openEdit('${PAGE_SHEET[pageKey]}','${pageKey}',${i})" title="編輯">✏</button>
+          <button class="act-btn del" onclick="confirmDelete('${PAGE_SHEET[pageKey]}','${pageKey}',${i+1})" title="刪除">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ===== VENDOR CARDS =====
+function renderCards(pageKey) {
+  const data = allData[pageKey];
+  const cg = document.getElementById('cg-' + pageKey);
+  if (!data || !cg) return;
+
+  const { headers, rows } = data;
+  const hi = h => headers.indexOf(h);
+
+  cg.innerHTML = rows.map((row, i) => {
+    const name = row[hi('廠商名稱')] || '—';
+    const cat = row[hi('廠商類別')] || '';
+    const addr = row[hi('地址')] || '';
+    const tel = row[hi('電話')] || '';
+    const fax = row[hi('傳真')] || '';
+    const person = row[hi('聯絡人')] || '';
+    const mobile = row[hi('行動電話')] || '';
+    const email = row[hi('Email')] || '';
+    return `
+    <div class="vcard">
+      <div class="vcard-top">
+        <div class="vcard-name">${name}</div>
+        ${cat?`<span class="badge ${CAT_BADGE[cat]||'badge-other'}">${cat}</span>`:''}
+      </div>
+      <div class="vcard-info">
+        ${addr?`<div class="row"><span class="ico">📍</span><span>${addr}</span></div>`:''}
+        ${tel?`<div class="row"><span class="ico">📞</span><span>${tel}</span></div>`:''}
+        ${fax?`<div class="row"><span class="ico">📠</span><span>${fax}</span></div>`:''}
+        ${person?`<div class="row"><span class="ico">👤</span><span>${person}${mobile?' · '+mobile:''}</span></div>`:''}
+        ${email?`<div class="row"><span class="ico">✉</span><span>${email}</span></div>`:''}
+      </div>
+      <div class="vcard-footer">
+        <button class="btn sm" style="flex:1;" onclick="openEdit('${PAGE_SHEET[pageKey]}','${pageKey}',${i})">✏ 編輯</button>
+        <button class="btn sm danger" onclick="confirmDelete('${PAGE_SHEET[pageKey]}','${pageKey}',${i+1})">🗑</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== VIEW TOGGLE =====
+function setView(pageKey, view, btn) {
+  document.querySelectorAll(`#page-${pageKey} .view-btn`).forEach(b => b.classList.remove('on'));
+  btn.classList.add('on');
+  document.getElementById(`${pageKey}-table`).style.display = view==='table'?'block':'none';
+  document.getElementById(`${pageKey}-cards`).style.display = view==='card'?'block':'none';
+  if (view === 'card') renderCards(pageKey);
+}
+
+// ===== PAGE SWITCH =====
+function showPage(pageKey) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.sb-item').forEach(n => n.classList.remove('on'));
+  document.getElementById('page-' + pageKey).classList.add('on');
+  document.getElementById('nav-' + pageKey).classList.add('on');
+  currentPage = pageKey;
+  renderTable(pageKey);
+}
+
+// ===== FILTER =====
+function filterTable(pageKey, query) {
+  const tbl = document.getElementById('tbl-' + pageKey);
+  if (!tbl) return;
+  const q = query.toLowerCase();
+  tbl.querySelectorAll('tbody tr').forEach(tr => {
+    tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+function filterByField(pageKey, fieldName, val) {
+  const data = allData[pageKey];
+  if (!data) return;
+  const colIdx = data.headers.indexOf(fieldName);
+  const tbl = document.getElementById('tbl-' + pageKey);
+  tbl.querySelectorAll('tbody tr').forEach((tr, i) => {
+    const row = data.rows[i];
+    if (!row) return;
+    tr.style.display = (!val || String(row[colIdx]) === val) ? '' : 'none';
+  });
+}
+
+// ===== MODAL =====
+const DROPDOWN_FIELDS = {
+  '廠商類別': ['平版印刷廠','版廠','後加工廠','代工廠','紙廠','自黏材料','刀模廠','設備商','物流','其他'],
+  '庫存狀態': ['現貨','需訂','停產'],
+  '用途分類': ['數位印刷','平版印刷','貼紙用紙','通用'],
+  '紙張類別': ['薄紙','厚紙','通用'],
+};
+const TEXTAREA_FIELDS = ['備註','業務說明','但書內容','地址'];
+const SKIP_FIELDS = ['更新日期'];
+
+function buildForm(headers, rowData) {
+  document.getElementById('modal-form').innerHTML = headers
+    .filter(h => !SKIP_FIELDS.includes(h))
+    .map(h => {
+      const val = rowData ? String(rowData[headers.indexOf(h)] || '') : '';
+      const isFull = TEXTAREA_FIELDS.includes(h) || h === '地址';
+      let input;
+      if (DROPDOWN_FIELDS[h]) {
+        input = `<select name="${h}"><option value="">—</option>${DROPDOWN_FIELDS[h].map(o=>`<option ${val===o?'selected':''}>${o}</option>`).join('')}</select>`;
+      } else if (TEXTAREA_FIELDS.includes(h)) {
+        input = `<textarea name="${h}" rows="2">${val}</textarea>`;
+      } else {
+        input = `<input type="text" name="${h}" value="${val}">`;
+      }
+      return `<div class="fg ${isFull?'full':''}"><label>${h}</label>${input}</div>`;
+    }).join('');
+}
+
+function openAdd(sheetName) {
+  modalSheet = sheetName;
+  modalRowIdx = null;
+  document.getElementById('modal-title').textContent = '新增 · ' + sheetName;
+  const pageKey = Object.keys(PAGE_SHEET).find(k => PAGE_SHEET[k] === sheetName);
+  const data = allData[pageKey];
+  if (data) buildForm(data.headers, null);
+  document.getElementById('modal-bg').classList.add('on');
+}
+
+function openEdit(sheetName, pageKey, cacheIdx) {
+  modalSheet = sheetName;
+  modalRowIdx = cacheIdx + 1;
+  document.getElementById('modal-title').textContent = '編輯 · ' + sheetName;
+  const data = allData[pageKey];
+  if (data) buildForm(data.headers, data.rows[cacheIdx]);
+  document.getElementById('modal-bg').classList.add('on');
+}
+
+function closeModal() {
+  document.getElementById('modal-bg').classList.remove('on');
+}
+
+async function saveModal() {
+  const btn = document.getElementById('save-btn');
+  btn.textContent = '儲存中...';
+  btn.disabled = true;
+
+  const rowData = {};
+  document.getElementById('modal-form').querySelectorAll('[name]').forEach(el => {
+    rowData[el.name] = el.value;
+  });
+
+  try {
+    const payload = modalRowIdx === null
+      ? { action: 'addRow', sheet: modalSheet, row: rowData }
+      : { action: 'updateRow', sheet: modalSheet, rowIndex: modalRowIdx, row: rowData };
+
+    const res = await fetch(API, { method: 'POST', body: JSON.stringify(payload) });
+    const result = await res.json();
+
+    if (result.error) { showToast('❌ ' + result.error, 'error'); return; }
+
+    // 更新本地快取
+    const pageKey = Object.keys(PAGE_SHEET).find(k => PAGE_SHEET[k] === modalSheet);
+    await refreshPage(pageKey);
+
+    closeModal();
+    showToast('✓ 儲存成功');
+
+  } catch(e) {
+    showToast('❌ 儲存失敗', 'error');
+  } finally {
+    btn.textContent = '儲存';
+    btn.disabled = false;
+  }
+}
+
+async function confirmDelete(sheetName, pageKey, rowIndex) {
+  if (!confirm('確定要刪除這筆資料？此操作無法復原。')) return;
+  try {
+    const res = await fetch(API, { method: 'POST', body: JSON.stringify({ action: 'deleteRow', sheet: sheetName, rowIndex }) });
+    const result = await res.json();
+    if (result.error) { showToast('❌ ' + result.error, 'error'); return; }
+    await refreshPage(pageKey);
+    showToast('✓ 刪除成功');
+  } catch(e) {
+    showToast('❌ 刪除失敗', 'error');
+  }
+}
+
+async function refreshPage(pageKey) {
+  try {
+    const res = await fetch(`${API}?action=getSheet&sheet=${encodeURIComponent(PAGE_SHEET[pageKey])}`);
+    const data = await res.json();
+    allData[pageKey] = data;
+    const cnt = document.getElementById('cnt-' + pageKey);
+    if (cnt) cnt.textContent = data.rows.length;
+    renderTable(pageKey);
+  } catch(e) {}
+}
+
+// ===== TOAST =====
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.innerHTML = msg;
+  t.className = `toast ${type} on`;
+  setTimeout(() => t.classList.remove('on'), 3000);
+}
+
+init();
+</script>
+</body>
+</html>
